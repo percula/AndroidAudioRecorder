@@ -1,8 +1,10 @@
 package cafe.adriel.androidaudiorecorder;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
+import android.os.Bundle;
 import android.os.Environment;
 import android.support.v4.app.Fragment;
 
@@ -20,9 +22,6 @@ public class AndroidAudioRecorder {
     protected static final String EXTRA_AUTO_START = "autoStart";
     protected static final String EXTRA_KEEP_DISPLAY_ON = "keepDisplayOn";
 
-    private Activity activity;
-    private Fragment fragment;
-
     private String filePath = Environment.getExternalStorageDirectory() + "/recorded_audio.wav";
     private AudioSource source = AudioSource.MIC;
     private AudioChannel channel = AudioChannel.STEREO;
@@ -32,21 +31,7 @@ public class AndroidAudioRecorder {
     private boolean autoStart = false;
     private boolean keepDisplayOn = false;
 
-    private AndroidAudioRecorder(Activity activity) {
-        this.activity = activity;
-    }
-
-    private AndroidAudioRecorder(Fragment fragment) {
-        this.fragment = fragment;
-    }
-
-    public static AndroidAudioRecorder with(Activity activity) {
-        return new AndroidAudioRecorder(activity);
-    }
-
-    public static AndroidAudioRecorder with(Fragment fragment) {
-        return new AndroidAudioRecorder(fragment);
-    }
+    public AndroidAudioRecorder() {}
 
     public AndroidAudioRecorder setFilePath(String filePath) {
         this.filePath = filePath;
@@ -88,28 +73,30 @@ public class AndroidAudioRecorder {
         return this;
     }
 
-    public void record() {
-        Intent intent = new Intent(activity, AudioRecorderActivity.class);
-        intent.putExtra(EXTRA_FILE_PATH, filePath);
-        intent.putExtra(EXTRA_COLOR, color);
-        intent.putExtra(EXTRA_SOURCE, source);
-        intent.putExtra(EXTRA_CHANNEL, channel);
-        intent.putExtra(EXTRA_SAMPLE_RATE, sampleRate);
-        intent.putExtra(EXTRA_AUTO_START, autoStart);
-        intent.putExtra(EXTRA_KEEP_DISPLAY_ON, keepDisplayOn);
-        activity.startActivityForResult(intent, requestCode);
+    public void record(Activity activity) {
+        activity.startActivityForResult(makeRecordIntent(activity), requestCode);
     }
 
-    public void recordFromFragment() {
-        Intent intent = new Intent(fragment.getActivity(), AudioRecorderActivity.class);
-        intent.putExtra(EXTRA_FILE_PATH, filePath);
-        intent.putExtra(EXTRA_COLOR, color);
-        intent.putExtra(EXTRA_SOURCE, source);
-        intent.putExtra(EXTRA_CHANNEL, channel);
-        intent.putExtra(EXTRA_SAMPLE_RATE, sampleRate);
-        intent.putExtra(EXTRA_AUTO_START, autoStart);
-        intent.putExtra(EXTRA_KEEP_DISPLAY_ON, keepDisplayOn);
-        fragment.startActivityForResult(intent, requestCode);
+    public void record(Fragment fragment) {
+        fragment.startActivityForResult(makeRecordIntent(fragment.getContext()), requestCode);
+    }
+
+    public Bundle makeIntentBundle() {
+        Bundle bundle = new Bundle();
+        bundle.putString(EXTRA_FILE_PATH, filePath);
+        bundle.putInt(EXTRA_COLOR, color);
+        bundle.putSerializable(EXTRA_SOURCE, source);
+        bundle.putSerializable(EXTRA_CHANNEL, channel);
+        bundle.putSerializable(EXTRA_SAMPLE_RATE, sampleRate);
+        bundle.putBoolean(EXTRA_AUTO_START, autoStart);
+        bundle.putBoolean(EXTRA_KEEP_DISPLAY_ON, keepDisplayOn);
+        return bundle;
+    }
+
+    public Intent makeRecordIntent(Context context) {
+        Intent intent = new Intent(context, AudioRecorderActivity.class);
+        intent.putExtras(makeIntentBundle());
+        return intent;
     }
 
 }
